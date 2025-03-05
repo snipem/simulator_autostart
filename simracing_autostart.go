@@ -51,6 +51,7 @@ func contains(ids []int, id int) bool {
 }
 
 func main() {
+	log.Println("simracing_autostart started")
 	for {
 		processName := "AMS2AVX.exe"
 		processId := getProcessIdForExecutable(processName)
