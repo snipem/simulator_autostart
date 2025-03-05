@@ -60,6 +60,7 @@ func main() {
 				"C:\\Program Files (x86)\\Britton IT Ltd\\CrewChiefV4\\CrewChiefV4.exe",
 				"C:\\Program Files (x86)\\SimHub\\SimHubWPF.exe",
 				"C:\\Users\\mail\\AppData\\Local\\popometer\\popometer-recorder.exe",
+				"C:\\Users\\mail\\work\\sim-to-motec\\ams2-cli.bat",
 			)
 			if err == nil {
 				autostartedProcessIds = append(autostartedProcessIds, processId)
