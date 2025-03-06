@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/stretchr/testify v1.10.0
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
