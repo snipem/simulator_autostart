@@ -24,19 +24,25 @@ func getProcessIdForExecutable(processName string) int {
 	return -1
 }
 
-func startProcesses(exePaths ...string) error {
-	for _, exePath := range exePaths {
-		cmd := exec.Command("cmd.exe", "/C", "start", "", exePath)
+func startProcessesIfNotRunning(programs []Program) error {
+	for _, program := range programs {
+		if getProcessIdForExecutable(program.GetExecutable()) != -1 {
+			log.Printf("Skip: Process %s is already running.\n", program.GetExecutable())
+			continue
+		}
+
+		cmd := exec.Command("cmd.exe", "/C", "start", "", program.Path)
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			HideWindow:    true,
 			CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
 		}
+		cmd.Dir = program.GetFolder() // Set working directory
 
 		err := cmd.Start()
 		if err != nil {
-			return fmt.Errorf("failed to start process %s: %w", exePath, err)
+			return fmt.Errorf("failed to start process %s: %w", program.Path, err)
 		}
-		log.Printf("Process %s started successfully.\n", exePath)
+		log.Printf("Started: Process %s started successfully.\n", program.Path)
 	}
 	return nil
 }
@@ -54,9 +60,21 @@ type State struct {
 	autostartedProcessIds []int
 }
 
+type Program struct {
+	Path string
+}
+
+func (p Program) GetExecutable() string {
+	return filepath.Base(p.Path)
+}
+
+func (p Program) GetFolder() string {
+	return filepath.Dir(p.Path)
+}
+
 type ProcessConfig struct {
 	ProcessName     string
-	ProgramsToStart []string
+	ProgramsToStart []Program
 }
 
 func readProcessConfigs() []ProcessConfig {
@@ -104,7 +122,10 @@ func readProcessConfigs() []ProcessConfig {
 		if section.Name() == "DEFAULT" {
 			continue
 		}
-		programs := section.Key("programs").Strings(",")
+		var programs []Program
+		for _, program := range section.Key("programs").Strings(",") {
+			programs = append(programs, Program{Path: program})
+		}
 		processConfigs = append(processConfigs, ProcessConfig{
 			ProcessName:     section.Name(),
 			ProgramsToStart: programs,
@@ -126,12 +147,11 @@ func main() {
 		time.Sleep(5 * time.Second)
 	}
 }
-func (s *State) startProgramsIfProcessIsRunning(processName string, programsToStart []string) {
+func (s *State) startProgramsIfProcessIsRunning(processName string, programsToStart []Program) {
 	processId := getProcessIdForExecutable(processName)
 	if processId != -1 && !contains(s.autostartedProcessIds, processId) {
 		log.Printf("Autostarting processes for %s ...\n", processName)
-		err := startProcesses(
-			programsToStart...)
+		err := startProcessesIfNotRunning(programsToStart)
 		if err == nil {
 			s.autostartedProcessIds = append(s.autostartedProcessIds, processId)
 		} else {
