@@ -4,7 +4,7 @@ SimRacing AutoStart is a utility designed to automatically start specified progr
 
 ## Download
 
-See [Releases]([url](https://github.com/snipem/simulator_autostart/releases)) for download links.
+See [Releases](https://github.com/snipem/simulator_autostart/releases) for download links.
 
 ## Configuration
 
