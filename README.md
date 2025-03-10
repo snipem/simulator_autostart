@@ -2,6 +2,10 @@
 
 SimRacing AutoStart is a utility designed to automatically start specified programs when a target process (e.g., a racing simulator) is detected as running. This tool is useful for launching applications like CrewChief, SimHub, or telemetry recorders automatically when you start your racing game.
 
+## Download
+
+See [Releases]([url](https://github.com/snipem/simulator_autostart/releases)) for download links.
+
 ## Configuration
 
 The configuration file is stored at:
