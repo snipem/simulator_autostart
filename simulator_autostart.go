@@ -78,7 +78,7 @@ type ProcessConfig struct {
 }
 
 func readProcessConfigs() []ProcessConfig {
-	configDir := filepath.Join(os.Getenv("APPDATA"), "simracing_autostart")
+	configDir := filepath.Join(os.Getenv("APPDATA"), "simulator_autostart")
 	configFile := filepath.Join(configDir, "config.ini")
 
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
@@ -136,7 +136,7 @@ func readProcessConfigs() []ProcessConfig {
 }
 
 func main() {
-	log.Println("simracing_autostart started")
+	log.Println("simulator_autostart started")
 	s := &State{}
 	processConfigs := readProcessConfigs()
 

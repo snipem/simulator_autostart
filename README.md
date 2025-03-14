@@ -1,19 +1,19 @@
-# SimRacing AutoStart
+# Simulator Autostart
 
-SimRacing AutoStart is a utility designed to automatically start specified programs when a target process (e.g., a racing simulator) is detected as running. This tool is useful for launching applications like CrewChief, SimHub, or telemetry recorders automatically when you start your racing game.
+Simulator Autostart is a utility designed to automatically start specified programs when a target process (e.g., a racing simulator) is detected as running. This tool is useful for launching applications like CrewChief, SimHub, or telemetry recorders automatically when you start your racing game.
 
 ## Configuration
 
 The configuration file is stored at:
 
 ```
-%APPDATA%\simracing_autostart\config.ini
+%APPDATA%\simulator_autostart\config.ini
 ```
 
 To open this folder in Windows Explorer, press `Win + R`, type the following command, and press Enter:
 
 ```
-explorer %APPDATA%\simracing_autostart
+explorer %APPDATA%\simulator_autostart
 ```
 
 ### Example `config.ini` file
@@ -40,7 +40,7 @@ C:\Users\mail\AppData\Local\racelabapps\RacelabApps.exe
 
 ## Usage
 
-Simply run the compiled executable of `simracing_autostart`. The program will automatically detect the defined processes and start the associated applications when needed.
+Simply run the compiled executable of `simulator_autostart`. The program will automatically detect the defined processes and start the associated applications when needed.
 
 ## Logging
 
@@ -51,5 +51,5 @@ The program logs its activity, showing which processes were detected and whether
 - If you modify `config.ini`, restart the program for changes to take effect.
 - The tool runs continuously in the background, checking every second for process changes.
 
-Enjoy your automated SimRacing setup!
+Enjoy your automated Simulator setup!
 
