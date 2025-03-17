@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const VERSION = "0.2"
+
 func getProcessIdForExecutable(processName string) int {
 	processes, _ := ps.Processes()
 
@@ -136,7 +138,7 @@ func readProcessConfigs() []ProcessConfig {
 }
 
 func main() {
-	log.Println("simulator_autostart started")
+	log.Println("simulator_autostart " + VERSION + " started")
 	s := &State{}
 	processConfigs := readProcessConfigs()
 
