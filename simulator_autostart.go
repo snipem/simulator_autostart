@@ -8,11 +8,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
 
-const VERSION = "0.2"
+const VERSION = "0.3"
+
+var startedProcesses []Program
 
 func getProcessIdForExecutable(processName string) int {
 	processes, _ := ps.Processes()
@@ -33,6 +36,11 @@ func startProcessesIfNotRunning(programs []Program) error {
 			continue
 		}
 
+		if isNonExeTool(program) && hasBeenStartedBefore(program) {
+			log.Printf("Skip: Non exe process %s has been started before.\n", program.GetExecutable())
+			continue
+		}
+
 		cmd := exec.Command("cmd.exe", "/C", "start", "", program.Path)
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			HideWindow:    true,
@@ -45,8 +53,28 @@ func startProcessesIfNotRunning(programs []Program) error {
 			return fmt.Errorf("failed to start process %s: %w", program.Path, err)
 		}
 		log.Printf("Started: Process %s started successfully.\n", program.Path)
+
+		startedProcesses = append(startedProcesses, program)
 	}
 	return nil
+}
+
+func hasBeenStartedBefore(program Program) bool {
+
+	for _, process := range startedProcesses {
+		if process.Path == program.Path {
+			return true
+		}
+	}
+	return false
+
+}
+
+func isNonExeTool(program Program) bool {
+	if !strings.HasSuffix(program.Path, ".exe") {
+		return true
+	}
+	return false
 }
 
 func contains(ids []int, id int) bool {
