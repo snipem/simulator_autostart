@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/mitchellh/go-ps"
 	"gopkg.in/ini.v1"
@@ -16,6 +17,7 @@ import (
 const VERSION = "0.3"
 
 var startedProcesses []Program
+var processConfigs []ProcessConfig // moved global so reload can update it
 
 func getProcessIdForExecutable(processName string) int {
 	processes, _ := ps.Processes()
@@ -60,14 +62,12 @@ func startProcessesIfNotRunning(programs []Program) error {
 }
 
 func hasBeenStartedBefore(program Program) bool {
-
 	for _, process := range startedProcesses {
 		if process.Path == program.Path {
 			return true
 		}
 	}
 	return false
-
 }
 
 func isNonExeTool(program Program) bool {
@@ -167,8 +167,26 @@ func readProcessConfigs() []ProcessConfig {
 
 func main() {
 	log.Println("simulator_autostart " + VERSION + " started")
+
+	// Initial config load
+	processConfigs = readProcessConfigs()
 	s := &State{}
-	processConfigs := readProcessConfigs()
+
+	log.Println("Type 'reload' to reload config.")
+
+	// Goroutine to listen for "r" key
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			input, _ := reader.ReadString('\n')
+			if strings.TrimSpace(input) == "reload" {
+				log.Println("Soft reload requested...")
+				startedProcesses = nil
+				s = &State{} // reset state
+				processConfigs = readProcessConfigs()
+			}
+		}
+	}()
 
 	for {
 		for _, config := range processConfigs {
@@ -177,6 +195,7 @@ func main() {
 		time.Sleep(5 * time.Second)
 	}
 }
+
 func (s *State) startProgramsIfProcessIsRunning(processName string, programsToStart []Program) {
 	processId := getProcessIdForExecutable(processName)
 	if processId != -1 && !contains(s.autostartedProcessIds, processId) {
