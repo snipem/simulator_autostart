@@ -17,6 +17,17 @@ import (
 
 const VERSION = "0.4"
 
+// ANSI color codes
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+	ColorBlue   = "\033[34m"
+	ColorPurple = "\033[35m"
+	ColorCyan   = "\033[36m"
+)
+
 var startedProcesses []Program
 var processConfigs []ProcessConfig // moved global so reload can update it
 
@@ -35,12 +46,12 @@ func getProcessIdForExecutable(processName string) int {
 func startProcessesIfNotRunning(programs []Program) error {
 	for _, program := range programs {
 		if getProcessIdForExecutable(program.GetExecutable()) != -1 {
-			log.Printf("Skip: Process %s is already running.\n", program.GetExecutable())
+			log.Printf("%sSkip:%s Process %s is already running.\n", ColorYellow, ColorReset, program.GetExecutable())
 			continue
 		}
 
 		if isNonExeTool(program) && hasBeenStartedBefore(program) {
-			log.Printf("Skip: Non exe process %s has been started before.\n", program.GetExecutable())
+			log.Printf("%sSkip:%s Non exe process %s has been started before.\n", ColorYellow, ColorReset, program.GetExecutable())
 			continue
 		}
 
@@ -55,7 +66,7 @@ func startProcessesIfNotRunning(programs []Program) error {
 		if err != nil {
 			return fmt.Errorf("failed to start process %s: %w", program.Path, err)
 		}
-		log.Printf("Started: Process %s started successfully.\n", program.Path)
+		log.Printf("%sStarted:%s Process %s started successfully.\n", ColorGreen, ColorReset, program.Path)
 
 		startedProcesses = append(startedProcesses, program)
 	}
@@ -146,7 +157,7 @@ FlightSimulator2024.exe:
 		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
-	log.Printf("Parsed Config from: %s", configFile)
+	log.Printf("%sParsed Config from:%s %s\n", ColorBlue, ColorReset, configFile)
 	var processConfigs []ProcessConfig
 
 	// Get sorted process names
@@ -159,7 +170,7 @@ FlightSimulator2024.exe:
 	// Process in alphabetical order
 	for _, processName := range processNames {
 		processData := config[processName]
-		log.Printf("Process: %s", processName)
+		log.Printf("%sProcess:%s %s", ColorPurple, ColorReset, processName)
 		var programs []Program
 		for _, programPath := range processData.Programs {
 			log.Printf("  - %s", programPath)
@@ -175,12 +186,12 @@ FlightSimulator2024.exe:
 }
 
 func main() {
-	log.Println("simulator_autostart " + VERSION + " started")
+	log.Printf("%ssimulator_autostart %s started%s\n", ColorCyan, VERSION, ColorReset)
 
 	// Initial config load
 	processConfigs = readProcessConfigs()
 	s := &State{}
-	log.Println("Type 'reload' to reload config.")
+	log.Printf("%sType 'reload' to reload config.%s\n", ColorCyan, ColorReset)
 
 	// Goroutine to listen for "r" key
 	go func() {
@@ -188,11 +199,11 @@ func main() {
 		for {
 			input, _ := reader.ReadString('\n')
 			if strings.TrimSpace(input) == "reload" {
-				log.Println("Soft reload requested...")
+				log.Printf("%sSoft reload requested...%s\n", ColorYellow, ColorReset)
 				startedProcesses = nil
 				s = &State{} // reset state
 				processConfigs = readProcessConfigs()
-				log.Println("Type 'reload' to reload config.")
+				log.Printf("%sType 'reload' to reload config.%s\n", ColorCyan, ColorReset)
 			}
 		}
 	}()
@@ -208,12 +219,12 @@ func main() {
 func (s *State) startProgramsIfProcessIsRunning(processName string, programsToStart []Program) {
 	processId := getProcessIdForExecutable(processName)
 	if processId != -1 && !contains(s.autostartedProcessIds, processId) {
-		log.Printf("Autostarting processes for %s ...\n", processName)
+		log.Printf("%sAutostarting processes for %s ...%s\n", ColorGreen, processName, ColorReset)
 		err := startProcessesIfNotRunning(programsToStart)
 		if err == nil {
 			s.autostartedProcessIds = append(s.autostartedProcessIds, processId)
 		} else {
-			log.Println("Error:", err)
+			log.Printf("%sError:%s %v\n", ColorRed, ColorReset, err)
 		}
 	}
 }
