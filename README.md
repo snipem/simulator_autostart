@@ -11,7 +11,7 @@ See [Releases](https://github.com/snipem/simulator_autostart/releases) for downl
 The configuration file is stored at:
 
 ```
-%APPDATA%\simulator_autostart\config.ini
+%APPDATA%\simulator_autostart\config.yaml
 ```
 
 To open this folder in Windows Explorer, press `Win + R`, type the following command, and press Enter:
@@ -20,20 +20,23 @@ To open this folder in Windows Explorer, press `Win + R`, type the following com
 explorer %APPDATA%\simulator_autostart
 ```
 
-### Example `config.ini` file
+### Example `config.yaml` file
 
-```ini
-[AMS2AVX.exe]
-programs=C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe,
-C:\Program Files (x86)\SimHub\SimHubWPF.exe,
-C:\Users\mail\AppData\Local\popometer\popometer-recorder.exe,
-C:\Users\mail\work\sim-to-motec\ams2-cli.bat
+```yaml
+# Assetto Corsa
+AssettoCorsa.exe:
+  programs:
+    - C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe
+    - C:\Program Files (x86)\SimHub\SimHubWPF.exe
+    - C:\Users\mail\Telemetry_for_RaceSims\telemetry_tool\runWin_AC.bat
 
-[iRacingUI.exe]
-programs=C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe,
-C:\Program Files (x86)\SimHub\SimHubWPF.exe,
-C:\Users\mail\AppData\Roaming\garage61-install\garage61-launcher.exe,
-C:\Users\mail\AppData\Local\racelabapps\RacelabApps.exe
+# iRacing
+iRacingUI.exe:
+  programs:
+    - C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe
+    - C:\Program Files (x86)\SimHub\SimHubWPF.exe
+    - C:\Users\mail\AppData\Roaming\garage61-install\garage61-launcher.exe
+    # - C:\Users\mail\AppData\Local\disabled-app.exe
 ```
 
 ## How It Works
@@ -51,8 +54,12 @@ Simply run the compiled executable of `simulator_autostart`. The program will au
 The program logs its activity, showing which processes were detected and whether an application was started or skipped due to already running.
 
 ## Notes
-- Ensure the paths in `config.ini` are correct.
-- If you modify `config.ini`, restart the program for changes to take effect.
+- Ensure the paths in `config.yaml` are correct.
+- Programs are listed as YAML arrays using the `-` syntax.
+- Lines starting with `#` are treated as comments and ignored.
+- Individual programs can be commented out by adding `#` at the beginning of the line.
+- No need to escape backslashes in Windows paths (unlike other formats).
+- If you modify `config.yaml`, restart the program for changes to take effect.
 - The tool runs continuously in the background, checking every second for process changes.
 
 Enjoy your automated Simulator setup!

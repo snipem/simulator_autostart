@@ -21,3 +21,8 @@ func Test_isProcessRunning(t *testing.T) {
 	assertEqual(t, getProcessIdForExecutable("Some Fake exe not running at all.exe"), -1)
 
 }
+
+func Test_getProcessIdForExcecutableContaining(t *testing.T) {
+	processId := getProcessIdForExcecutableContaining("svchost")
+	assertGreater(t, processId, 0)
+}

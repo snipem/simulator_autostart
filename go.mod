@@ -1,12 +1,11 @@
 module simulator_autostart
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.7
+toolchain go1.24.7
 
 require (
+	github.com/jcollie/w32 v1.0.0
 	github.com/mitchellh/go-ps v1.0.0
-	gopkg.in/ini.v1 v1.67.0
+	gopkg.in/yaml.v3 v3.0.1
 )
-
-require github.com/stretchr/testify v1.10.0 // indirect

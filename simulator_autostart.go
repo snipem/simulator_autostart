@@ -4,17 +4,18 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/mitchellh/go-ps"
-	"gopkg.in/ini.v1"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
 )
 
-const VERSION = "0.3"
+const VERSION = "0.4"
 
 var startedProcesses []Program
 var processConfigs []ProcessConfig // moved global so reload can update it
@@ -109,55 +110,63 @@ type ProcessConfig struct {
 
 func readProcessConfigs() []ProcessConfig {
 	configDir := filepath.Join(os.Getenv("APPDATA"), "simulator_autostart")
-	configFile := filepath.Join(configDir, "config.ini")
+	configFile := filepath.Join(configDir, "config.yaml")
 
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
 		os.Mkdir(configDir, os.ModePerm)
 	}
 
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		defaultConfig := "" +
-			"[AMS2AVX.exe]\n" +
-			"programs=C:\\Program Files (x86)\\Britton IT Ltd\\CrewChiefV4\\CrewChiefV4.exe," +
-			"C:\\Program Files (x86)\\SimHub\\SimHubWPF.exe," +
-			"C:\\Users\\mail\\AppData\\Local\\popometer\\popometer-recorder.exe," +
-			"C:\\Users\\mail\\work\\sim-to-motec\\ams2-cli.bat\n" +
-			"[iRacingUI.exe]\n" +
-			"programs=C:\\Program Files (x86)\\Britton IT Ltd\\CrewChiefV4\\CrewChiefV4.exe," +
-			"C:\\Program Files (x86)\\SimHub\\SimHubWPF.exe," +
-			"C:\\Users\\mail\\AppData\\Roaming\\garage61-install\\garage61-launcher.exe," +
-			"C:\\Users\\mail\\AppData\\Local\\racelabapps\\RacelabApps.exe\n"
+		defaultConfig := `# Assetto Corsa
+AssettoCorsa.exe:
+  programs:
+    - C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe
+    - C:\Program Files (x86)\SimHub\SimHubWPF.exe
+    - C:\Users\mail\Telemetry_for_RaceSims\telemetry_tool\runWin_AC.bat
+
+# Flight Simulator 2024
+FlightSimulator2024.exe:
+  programs:
+    - C:\Program Files (x86)\SimHub\SimHubWPF.exe
+    - C:\Program Files\Little Navmap\littlenavmap.exe
+`
 		os.WriteFile(configFile, []byte(defaultConfig), 0644)
 	}
 
-	cfg, err := ini.Load(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 	}
 
-	log.Println("Parsed Config:")
-	for _, section := range cfg.Sections() {
-		if section.Name() == "DEFAULT" {
-			continue
-		}
-		log.Printf("Process: %s", section.Name())
-		programs := section.Key("programs").Strings(",")
-		for _, program := range programs {
-			log.Printf("  - %s", program)
-		}
+	var config map[string]struct {
+		Programs []string `yaml:"programs"`
+	}
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
+	log.Printf("Parsed Config from: %s", configFile)
 	var processConfigs []ProcessConfig
-	for _, section := range cfg.Sections() {
-		if section.Name() == "DEFAULT" {
-			continue
-		}
+
+	// Get sorted process names
+	var processNames []string
+	for processName := range config {
+		processNames = append(processNames, processName)
+	}
+	sort.Strings(processNames)
+
+	// Process in alphabetical order
+	for _, processName := range processNames {
+		processData := config[processName]
+		log.Printf("Process: %s", processName)
 		var programs []Program
-		for _, program := range section.Key("programs").Strings(",") {
-			programs = append(programs, Program{Path: program})
+		for _, programPath := range processData.Programs {
+			log.Printf("  - %s", programPath)
+			programs = append(programs, Program{Path: programPath})
 		}
 		processConfigs = append(processConfigs, ProcessConfig{
-			ProcessName:     section.Name(),
+			ProcessName:     processName,
 			ProgramsToStart: programs,
 		})
 	}
@@ -171,7 +180,6 @@ func main() {
 	// Initial config load
 	processConfigs = readProcessConfigs()
 	s := &State{}
-
 	log.Println("Type 'reload' to reload config.")
 
 	// Goroutine to listen for "r" key
@@ -184,6 +192,7 @@ func main() {
 				startedProcesses = nil
 				s = &State{} // reset state
 				processConfigs = readProcessConfigs()
+				log.Println("Type 'reload' to reload config.")
 			}
 		}
 	}()
