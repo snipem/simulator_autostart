@@ -14,7 +14,8 @@ import (
 const VERSION = "0.4"
 
 type Program struct {
-	Path string
+	Path    string
+	WorkDir string
 }
 
 func (p Program) GetExecutable() string {
@@ -22,6 +23,9 @@ func (p Program) GetExecutable() string {
 }
 
 func (p Program) GetFolder() string {
+	if p.WorkDir != "" {
+		return p.WorkDir
+	}
 	return filepath.Dir(p.Path)
 }
 
@@ -94,7 +98,11 @@ func (e *Engine) startProcessesIfNotRunning(programs []Program) error {
 		if err != nil {
 			return fmt.Errorf("failed to start process %s: %w", program.Path, err)
 		}
-		e.logFn("[start] Process %s started successfully.", program.Path)
+		if program.WorkDir != "" {
+			e.logFn("[start] Process %s started successfully (workdir: %s).", program.Path, program.WorkDir)
+		} else {
+			e.logFn("[start] Process %s started successfully.", program.Path)
+		}
 
 		e.startedProcesses = append(e.startedProcesses, program)
 	}

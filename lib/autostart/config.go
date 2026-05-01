@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -29,6 +30,8 @@ AssettoCorsa.exe:
     - C:\Program Files (x86)\Britton IT Ltd\CrewChiefV4\CrewChiefV4.exe
     - C:\Program Files (x86)\SimHub\SimHubWPF.exe
     - C:\Users\mail\Telemetry_for_RaceSims\telemetry_tool\runWin_AC.bat
+    # Example with custom working directory (use | to separate):
+    # - C:\path\to\app.exe|D:\custom\workdir
 
 # Flight Simulator 2024
 FlightSimulator2024.exe:
@@ -68,8 +71,13 @@ FlightSimulator2024.exe:
 		e.logFn("[config] Process: %s", processName)
 		var programs []Program
 		for _, programPath := range processData.Programs {
-			e.logFn("[config]   - %s", programPath)
-			programs = append(programs, Program{Path: programPath})
+			program := parseProgram(programPath)
+			if program.WorkDir != "" {
+				e.logFn("[config]   - %s (workdir: %s)", program.Path, program.WorkDir)
+			} else {
+				e.logFn("[config]   - %s", program.Path)
+			}
+			programs = append(programs, program)
 		}
 		processConfigs = append(processConfigs, ProcessConfig{
 			ProcessName:     processName,
@@ -128,4 +136,13 @@ func (e *Engine) WatchConfigFile() {
 			}
 		}
 	}()
+}
+
+func parseProgram(input string) Program {
+	parts := strings.Split(input, "|")
+	program := Program{Path: strings.TrimSpace(parts[0])}
+	if len(parts) > 1 {
+		program.WorkDir = strings.TrimSpace(parts[1])
+	}
+	return program
 }
